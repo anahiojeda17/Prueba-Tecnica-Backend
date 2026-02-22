@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PruebaTecnica.Infrastructure;
 using PruebaTecnica.Application.Users.Commands;
+using PruebaTecnica.Application.Users.Queries;
 using Microsoft.OpenApi.Models;
 
 
@@ -82,6 +83,23 @@ app.MapPost("/users", async (CreateUserRequest request, AppDbContext db) =>
         return Results.BadRequest(result.Errors.Select(e => e.ErrorMessage));
     return await CreateUserCommand.Handle(request, db);
 });
+//listar users por estado
+app.MapGet("/users", async (bool? isActive, AppDbContext db) =>
+{
+    var users = await GetAllUsersQuery.Handle(isActive, db);
+    Results.Ok(users);
 
+});
+//listar por id
+app.MapGet("/users {id}", async (int id, AppDbContext db) =>
+{
+    var user = await GetIdUsersQuery.Handle(id, db);
+    if (user is null)
+        return Results.NotFound("Usuario no encontrado");
+    
+    return Results.Ok(user);
+});
+
+//modificar users 
 
 app.Run();
