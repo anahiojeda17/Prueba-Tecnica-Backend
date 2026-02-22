@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using PruebaTecnica.Infrastructure;
 using PruebaTecnica.Application.Users.Commands;
 using PruebaTecnica.Application.Users.Queries;
+using PruebaTecnica.Application.Addresses.Commands;
+using PruebaTecnica.Application.Addresses.Queries;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -124,6 +126,52 @@ app.MapDelete("/users {id}", async(int id, AppDbContext db) =>
         return Results.NotFound("Usuario no encontrado");
 
     return Results.Ok("Usuario Eliminado");
+});
+
+//endpoints de Addreses
+//crear la direccion de dicho usuario 
+app.MapPost("/users/{userId}/addresses", async (int userId, CreateAddressRequest request, AppDbContext db) =>
+{
+    var validator = new CreateAddressValidator();
+    var result = validator.Validate(request);
+
+    if (!result.IsValid)
+        return Results.BadRequest(result.Errors.Select(e => e.ErrorMessage));
+
+    var created = await CreateAddressCommand.Handle(userId, request, db);
+
+    if (!created)
+        return Results.NotFound("Usuario no encontrado");
+
+    return Results.Created($"/users/{userId}/addresses", request);
+});
+
+//listar las direcciones de un usuario 
+app.MapGet("/users/{userId}/addresses", async (int userId, AppDbContext db) =>
+{
+    var user = await db.Users.FindAsync(userId);
+    if (user is null)
+        return Results.NotFound("Usuario no encontrado");
+
+    var addresses = await GetAllAddressUserQuery.Handle(userId, db);
+    return Results.Ok(addresses);
+});
+
+//modificar direcciones 
+app.MapPut("/addresses/{id}", async (int id, UpdateAddressRequest request, AppDbContext db) =>
+{
+    var validator = new UpdateAddressValidator();
+    var result = validator.Validate(request);
+    
+    if (!result.IsValid)
+        return Results.BadRequest(result.Errors.Select(e => e.ErrorMessage));
+
+    var updated = await UpdateAddressCommand.Handle(id, request, db);
+
+    if (!updated)
+        return Results.NotFound("Dirección no encontrada");
+
+    return Results.Ok("Dirección actualizada");
 });
 
 app.Run();
