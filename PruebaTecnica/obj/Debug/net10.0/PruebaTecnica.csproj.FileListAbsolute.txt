@@ -152,3 +152,4 @@ C:\Proyectos\Prueba tecnica\PruebaTecnica\obj\Debug\net10.0\refint\PruebaTecnica
 C:\Proyectos\Prueba tecnica\PruebaTecnica\obj\Debug\net10.0\PruebaTecnica.pdb
 C:\Proyectos\Prueba tecnica\PruebaTecnica\obj\Debug\net10.0\PruebaTecnica.genruntimeconfig.cache
 C:\Proyectos\Prueba tecnica\PruebaTecnica\obj\Debug\net10.0\ref\PruebaTecnica.dll
+C:\Proyectos\Prueba tecnica\PruebaTecnica\bin\Debug\net10.0\BCrypt.Net-Next.dll
