@@ -12,6 +12,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // definicion de servicios 
 builder.Services.AddEndpointsApiExplorer();
+//esto es para que no explote al traer las direcciones de un usuario, ya que crea un loop infinito
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+});
 //swagger para ingresar el api key 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -93,7 +98,7 @@ app.MapGet("/users", async (bool? isActive, AppDbContext db) =>
 
 });
 //listar por id
-app.MapGet("/users {id}", async (int id, AppDbContext db) =>
+app.MapGet("/users/{id}", async (int id, AppDbContext db) =>
 {
     var user = await GetIdUsersQuery.Handle(id, db);
     if (user is null)
@@ -103,7 +108,7 @@ app.MapGet("/users {id}", async (int id, AppDbContext db) =>
 });
 
 //modificar users 
-app.MapPut("/users {id}", async(int id, UpdateUserRequest request, AppDbContext db) =>
+app.MapPut("/users/{id}", async(int id, UpdateUserRequest request, AppDbContext db) =>
 {
     var validator = new UpdateUserValidator();
     var result = validator.Validate(request);
@@ -120,7 +125,7 @@ app.MapPut("/users {id}", async(int id, UpdateUserRequest request, AppDbContext 
 });
 
 //eliminar users 
-app.MapDelete("/users {id}", async(int id, AppDbContext db) =>
+app.MapDelete("/users/{id}", async(int id, AppDbContext db) =>
 {
     var delete = await DeleteUserCommand.Handle(id, db);
     
