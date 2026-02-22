@@ -1,12 +1,39 @@
 using Microsoft.EntityFrameworkCore;
 using PruebaTecnica.Infrastructure;
 using PruebaTecnica.Application.Users.Commands;
+using Microsoft.OpenApi.Models;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 // definicion de servicios 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+    {
+        Name = "X-API-KEY",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Description = "Ingresa tu API Key"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "ApiKey"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
+
 builder.Services.AddScoped<CreateUserValidator>();
 
 
@@ -15,20 +42,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=app.db"));
 
 var app = builder.Build();
-
-//definicion de endpoints users
-// crear
-app.MapPost("/users", async (CreateUserRequest request, AppDbContext db) =>
-{
-    var validator = new CreateUserValidator();
-    var result = validator.Validate(request);
-    //devulve error si es que no pasa la validacion sino, ejecuta el comando
-    if (!result.IsValid)
-        return Results.BadRequest(result.Errors.Select(e => e.ErrorMessage));
-    return await CreateUserCommand.Handle(request, db);
-});
-
-
 
 // Middleware de API Key
 app.Use(async (context, next) =>
@@ -56,7 +69,19 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
 app.UseHttpsRedirection();
+
+//definicion de endpoints users
+// crear
+app.MapPost("/users", async (CreateUserRequest request, AppDbContext db) =>
+{
+    var validator = new CreateUserValidator();
+    var result = validator.Validate(request);
+    //devulve error si es que no pasa la validacion sino, ejecuta el comando
+    if (!result.IsValid)
+        return Results.BadRequest(result.Errors.Select(e => e.ErrorMessage));
+    return await CreateUserCommand.Handle(request, db);
+});
+
 
 app.Run();
