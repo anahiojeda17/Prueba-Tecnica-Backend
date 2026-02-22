@@ -162,7 +162,7 @@ app.MapPut("/addresses/{id}", async (int id, UpdateAddressRequest request, AppDb
 {
     var validator = new UpdateAddressValidator();
     var result = validator.Validate(request);
-    
+
     if (!result.IsValid)
         return Results.BadRequest(result.Errors.Select(e => e.ErrorMessage));
 
@@ -173,5 +173,16 @@ app.MapPut("/addresses/{id}", async (int id, UpdateAddressRequest request, AppDb
 
     return Results.Ok("Dirección actualizada");
 });
+//eliminar direccion
+app.MapDelete("/addresses/{id}", async (int id, AppDbContext db) =>
+{
+    var deleted = await DeleteAddressCommand.Handle(id, db);
+
+    if (!deleted)
+        return Results.NotFound("Dirección no encontrada");
+
+    return Results.Ok("Dirección eliminada");
+});
+
 
 app.Run();
