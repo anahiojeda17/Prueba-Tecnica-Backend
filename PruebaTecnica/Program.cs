@@ -6,6 +6,7 @@ using PruebaTecnica.Application.Addresses.Commands;
 using PruebaTecnica.Application.Addresses.Queries;
 using PruebaTecnica.Application.Currencies.Commands;
 using PruebaTecnica.Application.Currencies.Queries;
+using PruebaTecnica.Application.CurrencyConversion;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -206,6 +207,23 @@ app.MapPost("/currencies", async (CreateCurrencyRequest request, AppDbContext db
 app.MapGet("/currencies", async (AppDbContext db) =>
 {
     return await GetCurrencyQuery.Handle(db);
+});
+//eliminar currencies por id
+app.MapDelete("/currencies/{id}", async (int id, AppDbContext db) =>
+{
+    return await DeleteCurrencyCommand.Handle(id, db);
+});
+
+//conversion de divisas
+app.MapPost("/currency/convert", async (ConvertCurrencyRequest request, AppDbContext db) =>
+{
+    var validator = new ConvertCurrencyValidator();
+    var result = validator.Validate(request);
+
+    if (!result.IsValid)
+        return Results.BadRequest(result.Errors.Select(e => e.ErrorMessage));
+
+    return await ConvertCurrencyCommand.Handle(request, db);
 });
 
 
