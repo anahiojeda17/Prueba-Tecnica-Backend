@@ -4,12 +4,11 @@ using PruebaTecnica.Application.Users.Commands;
 using PruebaTecnica.Application.Users.Queries;
 using Microsoft.OpenApi.Models;
 
-
-
 var builder = WebApplication.CreateBuilder(args);
 
 // definicion de servicios 
 builder.Services.AddEndpointsApiExplorer();
+//swagger para ingresar el api key 
 builder.Services.AddSwaggerGen(c =>
 {
     c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
@@ -36,7 +35,6 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddScoped<CreateUserValidator>();
-
 
 // Base de datos SQLite - que guarde la base de datos en un archivo
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -87,7 +85,7 @@ app.MapPost("/users", async (CreateUserRequest request, AppDbContext db) =>
 app.MapGet("/users", async (bool? isActive, AppDbContext db) =>
 {
     var users = await GetAllUsersQuery.Handle(isActive, db);
-    Results.Ok(users);
+    return Results.Ok(users);
 
 });
 //listar por id
@@ -101,5 +99,20 @@ app.MapGet("/users {id}", async (int id, AppDbContext db) =>
 });
 
 //modificar users 
+app.MapPut("/users {id}", async(int id, UpdateUserRequest request, AppDbContext db) =>
+{
+    var validator = new UpdateUserValidator();
+    var result = validator.Validate(request);
+
+    if (!result.IsValid)
+        return Results.BadRequest(result.Errors.Select(e => e.ErrorMessage));
+
+    var updated = await UpdateUserCommand.Handle(id, request, db);
+    
+    if (!updated)
+        return Results.NotFound("Usuario no encontrado");
+
+    return Results.Ok("Usuario actualizado");   
+});
 
 app.Run();
