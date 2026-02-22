@@ -4,6 +4,8 @@ using PruebaTecnica.Application.Users.Commands;
 using PruebaTecnica.Application.Users.Queries;
 using PruebaTecnica.Application.Addresses.Commands;
 using PruebaTecnica.Application.Addresses.Queries;
+using PruebaTecnica.Application.Currencies.Commands;
+using PruebaTecnica.Application.Currencies.Queries;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -182,6 +184,23 @@ app.MapDelete("/addresses/{id}", async (int id, AppDbContext db) =>
         return Results.NotFound("Dirección no encontrada");
 
     return Results.Ok("Dirección eliminada");
+});
+//currencies 
+//creacion 
+app.MapPost("/currencies", async (CreateCurrencyRequest request, AppDbContext db) =>
+{
+    var validator = new CreateCurrencyValidator();
+    var result = validator.Validate(request);
+    
+    if (!result.IsValid)
+        return Results.BadRequest(result.Errors.Select(e => e.ErrorMessage));
+
+    return await CreateCurrencyCommand.Handle(request, db);
+});
+// listar los currencies 
+app.MapGet("/currencies", async (AppDbContext db) =>
+{
+    return await GetCurrencyQuery.Handle(db);
 });
 
 
