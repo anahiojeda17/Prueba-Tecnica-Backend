@@ -115,4 +115,15 @@ app.MapPut("/users {id}", async(int id, UpdateUserRequest request, AppDbContext 
     return Results.Ok("Usuario actualizado");   
 });
 
+//eliminar users 
+app.MapDelete("/users {id}", async(int id, AppDbContext db) =>
+{
+    var delete = await DeleteUserCommand.Handle(id, db);
+    
+    if(!delete)
+        return Results.NotFound("Usuario no encontrado");
+
+    return Results.Ok("Usuario Eliminado");
+});
+
 app.Run();
