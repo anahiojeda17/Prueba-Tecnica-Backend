@@ -1,4 +1,4 @@
-# Prueba Técnica Backend - API REST 
+# API REST 
 
 ## Versión de .NET
 .NET 8 
